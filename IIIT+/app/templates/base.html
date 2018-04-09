@@ -7,13 +7,17 @@
 			<title>COME CONNECT TO ALL</title>
 		{% endif %}
 	</head>
+	<body>
 {% block navbar %}
 	<nav class="navbar navbar-default" role="navigation">
 		<div class="container">
 			<div class="navbar-header">
-				<a class="navbar-brand" href="/index">HOME</a>
-				<a class="navbar-brand" href="/login">Login</a>
-				<a class="navbar-brand" href="/index">Logout</a>
+				<a class="navbar-brand" href=url_for('/index')>HOME</a>
+				{% if current_user.is_anonymous %}
+				<a class="navbar-brand" href=url_for('/login')>Login</a>
+				{% else %}
+				<a class="navbar-brand" href=url_for('/logout')>Logout</a>
+				{% endif %}
 			</div>
 		</div>
 	</nav>
@@ -29,4 +33,5 @@
         {% endif %}
         {% endwith %}
 {% block content %}{% endblock %}
-
+</body>
+</html>
