@@ -1,0 +1,32 @@
+{% extends 'bootstrap/base.html' %}
+<html>
+	<head>
+		{% if title %}
+			<title>{{ title }} - IIIT+ </title>
+		{% else %}
+			<title>COME CONNECT TO ALL</title>
+		{% endif %}
+	</head>
+{% block navbar %}
+	<nav class="navbar navbar-default" role="navigation">
+		<div class="container">
+			<div class="navbar-header">
+				<a class="navbar-brand" href="/index">HOME</a>
+				<a class="navbar-brand" href="/login">Login</a>
+				<a class="navbar-brand" href="/index">Logout</a>
+			</div>
+		</div>
+	</nav>
+{% endblock %}
+<hr>
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <ul>
+            {% for message in messages %}
+            <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% endwith %}
+{% block content %}{% endblock %}
+
