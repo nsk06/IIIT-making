@@ -1,4 +1,4 @@
-from views import db,login
+from views import db,log
 from datetime import datetime
 from passlib.apps import custom_app_context as pwd_context
 from passlib.context import CryptContext
@@ -26,7 +26,7 @@ class User(UserMixin,db.Model):
     def check_password(self, password):
         return pwd_context.verify(password,self.password_hash)
 
-@login.user_loader
+@log.user_loader
 def load_user(id):
     return User.query.get(int(id))
 class Post(db.Model):

@@ -12,11 +12,12 @@
 	<nav class="navbar navbar-default" role="navigation">
 		<div class="container">
 			<div class="navbar-header">
-				<a class="navbar-brand" href=url_for('/index')>HOME</a>
+				<a class="navbar-brand" href="{{ url_for('index') }}">HOME</a>
 				{% if current_user.is_anonymous %}
-				<a class="navbar-brand" href=url_for('/login')>Login</a>
+				<a class="navbar-brand" href="{{ url_for('login') }}">Login</a>
 				{% else %}
-				<a class="navbar-brand" href=url_for('/logout')>Logout</a>
+				<a class = "navbar-brand" href = "{{ url_for('user',username=current_user.username) }}">Profile</a>
+				<a class="navbar-brand" href="{{ url_for('logout') }}">Logout</a>
 				{% endif %}
 			</div>
 		</div>
