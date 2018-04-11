@@ -1,6 +1,0 @@
-flask-login
-flask-wtf
-passlib
-flask-bootstrap
-flask_migrate
-flask_sqlalchemy
