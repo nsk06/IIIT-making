@@ -6,8 +6,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import login_user, logout_user, current_user
 from flask_login import login_required,LoginManager
-
-app = Flask(__name__)
+import os
+app = Flask(__name__,static_url_path = "/static",static_folder = "static")
 bootstrap = Bootstrap(app)
 app.config.from_object(Config)
 db = SQLAlchemy(app)
@@ -16,9 +16,15 @@ log = LoginManager(app)
 log.login_view = 'login'
 from database import *
 from login import *
-
-
+from upload import *
 from datetime import datetime
+
+#app.config['SECRET_KEY'] = 'I have a dream'
+app.config['UPLOADED_PHOTOS_DEST'] = os.getcwd() + '/static'
+
+
+configure_uploads(app, photos)
+patch_request_class(app)
 
 @app.before_request
 def before_request():
@@ -89,6 +95,35 @@ def user(username):
         {'author': user, 'body': 'Test post #2'}
     ]
     return render_template('user.html', user=user, posts=posts)
+
+@app.route('/edit_profile', methods=['GET', 'POST'])
+@login_required
+def edit_profile():
+    form = EditProfileForm()
+    if form.validate_on_submit():
+        current_user.username = form.username.data
+        current_user.about_me = form.about_me.data
+        db.session.commit()
+        flash('Your changes have been saved.')
+        return redirect(url_for('edit_profile'))
+    elif request.method == 'GET':
+        form.username.data = current_user.username
+        form.about_me.data = current_user.about_me
+    return render_template('edit_profile.html', title='Edit Profile',
+                           form=form)
+
+@app.route('/picture',methods=['GET','POST'])
+@login_required
+def upload():
+    form = UploadForm()
+    if form.validate_on_submit():
+        myname = str(current_user.username)
+        filename = photos.save(form.photo.data,myname,"profile.")
+        file_url = photos.url(filename)
+        #print(file_url)
+    else:
+        file_url = None
+    return render_template('upload.html', form=form, file_url=file_url)
 
 @app.shell_context_processor
 def make_shell_context():
