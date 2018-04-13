@@ -13,6 +13,7 @@
 		<div class="container">
 			<div class="navbar-header">
 				<a class="navbar-brand" href="{{ url_for('index') }}">HOME</a>
+				<a class="navbar-brand" href="{{ url_for('explore') }}">Explore</a>
 				{% if current_user.is_anonymous %}
 				<a class="navbar-brand" href="{{ url_for('login') }}">Login</a>
 				{% else %}

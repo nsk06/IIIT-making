@@ -1,5 +1,5 @@
-<!DOCTYPE html>
-<title>Upload File</title>
+{% extends "base.html" %}
+{% block content %}
 <h1>Photo Upload</h1>
 <form method="POST" enctype="multipart/form-data">
      {{ form.hidden_tag() }}
@@ -7,10 +7,10 @@
      {% for error in form.photo.errors %}
          <span style="color: red;">{{ error }}</span>
      {% endfor %}
-     {{ form.submit }}
+   <p>{{ form.submit() }}</p>
 </form>
-
 {% if file_url %}
 <br>
-<img src="{{ file_url }}">
+<img src="{{ file_url }}" height="100" width="100">
 {% endif %}
+{% endblock %}
