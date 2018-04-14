@@ -3,6 +3,8 @@ from wtforms import *
 #from wtforms.validators import *
 from wtforms.validators import ValidationError, DataRequired, Email, EqualTo,Length
 from database import *
+from flask import request
+#from flask_babel import lazy_gettext as _l
 
 class Login(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
@@ -51,3 +53,13 @@ class GroupForm(FlaskForm):
         DataRequired(),Length(min=1,max=45)])
     Type = SelectField('Group_Type',choices = [(1,'private'),(2,'public'),(3,'closed')],coerce = int)
     submit = SubmitField('enter')
+
+class SearchForm(FlaskForm):
+    q = StringField('Search', validators=[DataRequired()])
+
+    def __init__(self, *args, **kwargs):
+        if 'formdata' not in kwargs:
+            kwargs['formdata'] = request.args
+        if 'csrf_enabled' not in kwargs:
+            kwargs['csrf_enabled'] = False
+            super(SearchForm, self).__init__(*args, **kwargs)

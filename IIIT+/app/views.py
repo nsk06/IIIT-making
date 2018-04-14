@@ -7,6 +7,8 @@ from flask_migrate import Migrate
 from flask_login import login_user, logout_user, current_user
 from flask_login import login_required,LoginManager
 import os
+from elasticsearch import Elasticsearch
+from flask_babel import *
 app = Flask(__name__,static_url_path = "/static",static_folder = "static")
 bootstrap = Bootstrap(app)
 app.config.from_object(Config)
@@ -21,16 +23,24 @@ from datetime import datetime
 
 #app.config['SECRET_KEY'] = 'I have a dream'
 app.config['UPLOADED_PHOTOS_DEST'] = os.getcwd() + '/static'
+with app.app_context():
+    # within this block, current_app points to app.
+    print (current_app.name)
 
+app.elasticsearch = Elasticsearch([app.config['ELASTICSEARCH_URL']]) \
+        if app.config['ELASTICSEARCH_URL'] else None
 
 configure_uploads(app, photos)
 patch_request_class(app)
+print(app.config)
 
 @app.before_request
 def before_request():
     if current_user.is_authenticated:
         current_user.last_seen = datetime.utcnow()
         db.session.commit()
+        g.search_form = SearchForm()
+    #g.locale = str(get_locale())
 
 @app.route('/',methods = ['GET','POST'])
 @app.route('/index',methods=['GET','POST'])
@@ -252,7 +262,27 @@ def unfollow(username):
     flash('You are not following {}.'.format(username))
     return redirect(url_for('user', username=username))
 
-
+@app.route('/search')
+@login_required
+def search():
+    #print("hi")
+    #print(current_app)
+    if not g.search_form.validate():
+        return redirect(url_for('explore'))
+    #print("yo")
+    page = request.args.get('page', 1, type=int)
+    print(g.search_form.q.data)
+    posts,total = Post.search(g.search_form.q.data, page,
+                               current_app.config['POSTS_PER_PAGE'])
+    print(total)
+    for x in posts:
+        print(x.body)
+    next_url = url_for('search', q=g.search_form.q.data, page=page + 1) \
+        if total > page * current_app.config['POSTS_PER_PAGE'] else None
+    prev_url = url_for('search', q=g.search_form.q.data, page=page - 1) \
+        if page > 1 else None
+    return render_template('search.html', title='Search', posts=posts,
+                           next_url=next_url, prev_url=prev_url)
 @app.errorhandler(404)
 def not_found_error(error):
     return render_template('404.html'), 404

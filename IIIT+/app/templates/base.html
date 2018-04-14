@@ -15,6 +15,13 @@
 				<a class="navbar-brand" href="{{ url_for('index') }}">HOME</a>
 				<a class="navbar-brand" href="{{ url_for('explore') }}">Explore</a>
         <a class="navbar-brand" href="{{ url_for('Allgroups') }}">Allgroups</a>
+        {% if g.search_form %}
+                <form class="navbar-form navbar-left" method="get" action="{{ url_for('search') }}">
+                    <div class="form-group">
+                        {{ g.search_form.q(size=20, class='form-control', placeholder=g.search_form.q.label.text) }}
+                    </div>
+                </form>
+        {% endif %}
 				{% if current_user.is_anonymous %}
 				<a class="navbar-brand" href="{{ url_for('login') }}">Login</a>
 				{% else %}
