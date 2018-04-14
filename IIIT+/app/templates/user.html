@@ -20,12 +20,12 @@
     </table>
     <h1>User: {{ user.username }}</h1>
     {% set ab=[user.username,"profile.jpg"]|join('/') %}
-    <img src= "{{ url_for('static', filename = ab ) }}" alt= {{ user.username }} height="80" width="80" />
+    <img src= "{{ url_for('static', filename = ab ) }}" alt= {{ user.username }} height="80" width="80" class="img-rounded" />
     <hr>
     {% for post in posts %}
     <p>
     {%set x = [post.author.username,"profile.jpg"]|join('/') %}
-    <img src= "{{ url_for('static', filename = x ) }}" alt= {{ post.author.username }} height="80" width="80" />
+    <img src= "{{ url_for('static', filename = x ) }}" alt= {{ post.author.username }} height="80" width="80" class="img-rounded" />
     {{ post.author.username }} says: <b>{{ post.body }}</b>
     </p>
     {% endfor %}

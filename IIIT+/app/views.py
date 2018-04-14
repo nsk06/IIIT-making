@@ -68,8 +68,62 @@ def explore():
         if posts.has_prev else None
     return render_template('index.html', title='Explore', posts=posts.items,
                            next_url=next_url, prev_url=prev_url)
+@app.route('/Allgroups')
+@login_required
+def Allgroups():
+    page = request.args.get('page', 1, type=int)
+    groups = Group.query.all()
+    #.paginate(
+      #  page, app.config['POSTS_PER_PAGE'], False)
+   # next_url = url_for('Allgroups', page=groups.next_num) \
+       # if groups.has_next else None
+  #  prev_url = url_for('Allgroups', page=groups.prev_num) \
+     #   if groups.has_prev else None
+    return render_template('Allgroups.html', title='Allgroups', groups=groups)
 
+@app.route('/groupview/<groupname>')
+@login_required
+def vu(groupname):
+    cur_group = Group.query.filter_by(groupname = groupname).first()
+    page = request.args.get('page', 1, type=int)
+    posts = cur_group.grouppost().paginate(
+        page, app.config['POSTS_PER_PAGE'], False)
+    next_url = url_for('groupview', page=posts.next_num) \
+        if posts.has_next else None
+    prev_url = url_for('groupview', page=posts.prev_num) \
+        if posts.has_prev else None
+    return render_template('index.html', title='Home',
+                           posts=posts.items, next_url=next_url,
+prev_url=prev_url)
 
+@app.route('/groupjoin/<groupname>')
+@login_required
+def join(groupname):
+    myad = Group.query.filter(Group.groupname == groupname).first()
+    newgroupmem = Group(groupname = groupname, adminId = myad.adminId, userid = current_user.id )
+    if Group.query.filter(Group.groupname == newgroupmem.groupname).count() == 0:
+            db.session.add(newgroupmem)
+            db.session.commit()
+            print("aaja")
+            flash('You are now member of the group!')
+            return redirect(url_for('Allgroups'))
+    else:
+        flash('already member')
+        return redirect(url_for('Allgroups'))
+
+@app.route('/Mygroups')
+@login_required
+def my():
+    page = request.args.get('page', 1, type=int)
+    groups = Group.query.filter(Group.userid == current_user.id).paginate(
+        page, app.config['POSTS_PER_PAGE'], False)
+        #print(groups.items)
+    next_url = url_for('mygroups', page=posts.next_num) \
+        if groups.has_next else None
+    prev_url = url_for('mygroups', page=posts.prev_num) \
+        if groups.has_prev else None
+    return render_template('mygroups.html', title='Mygroup', groups=groups.items,
+                           next_url=next_url, prev_url=prev_url)
 
 @app.route('/login',methods  = ['GET', 'POST'])
 def login():
@@ -87,6 +141,7 @@ def login():
             next_page = url_for('index')
         return redirect(next_page)
     return render_template('login.html', title='Sign In', form=form)
+
 
 
 @app.route('/logout')
@@ -151,6 +206,21 @@ def upload():
     else:
         file_url = None
     return render_template('upload.html', form=form, file_url=file_url)
+
+@app.route('/Create_Group',methods=['GET','POST'])
+@login_required
+def group():
+    form = GroupForm()
+    if form.validate_on_submit():
+        group = Group(groupname = form.name.data, adminId = current_user.id, userid = current_user.id)
+        if Group.query.filter(Group.groupname == group.groupname).count() == 0:
+            db.session.add(group)
+            db.session.commit()
+        else:
+            flash("already exists")
+            return redirect(url_for('my'))
+        #print(group.groupname)
+    return render_template('creategroup.html',form = form)
 
 @app.route('/follow/<username>')
 @login_required

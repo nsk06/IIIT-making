@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 {% block content %}
     <h1>Hey, {{ current_user.username }}!</h1>
+    <table>
+        <td>  <p><a href="{{ url_for('group') }}">Create New Group</a></p></td>
+    </table>
      {% if form %}
     <form action="" method="post" class="form-group">
         {{ form.hidden_tag() }}
@@ -14,13 +17,18 @@
         <p>{{ form.submit() }}</p>
     </form>
 {% endif %}
-    {% for post in posts %}
-    {% include '_post.html' %}
+    {% for group in groups %}
+    <!--{% include '_group.html' %}-->
+    <p>
+    <a href="{{ url_for('vu', groupname=group.groupname) }}">
+    {{ group.groupname }}
+    </a>
+    </p> 
     {% endfor %}
     {% if prev_url %}
-    <a href="{{ prev_url }}" class="pagination">Newer posts</a>
+    <a href="{{ prev_url }}" class="pagination">More Groups</a>
     {% endif %}
     {% if next_url %}
-    <a href="{{ next_url }}" class="pagination">Older posts</a>
+    <a href="{{ next_url }}" class="pagination">My Groups</a>
 {% endif %}
 {% endblock %}
