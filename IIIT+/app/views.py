@@ -20,7 +20,8 @@ from database import *
 from login import *
 from upload import *
 from datetime import datetime
-
+from flask_admin import *
+from flask_admin.contrib.sqla import ModelView
 #app.config['SECRET_KEY'] = 'I have a dream'
 app.config['UPLOADED_PHOTOS_DEST'] = os.getcwd() + '/static'
 with app.app_context():
@@ -32,7 +33,11 @@ app.elasticsearch = Elasticsearch([app.config['ELASTICSEARCH_URL']]) \
 
 configure_uploads(app, photos)
 patch_request_class(app)
+
+ad = "nonidh"
 #print(app.config)
+admin = Admin(app)
+
 
 @app.before_request
 def before_request():
@@ -187,8 +192,12 @@ def login():
         if not next_page or url_parse(next_page).netloc != '':
             next_page = url_for('index')
         return redirect(next_page)
-    return render_template('login.html', title='Sign In', form=form)
+    return render_template('login.html', title='Sign In', form=form,admin = ad)
 
+@app.route('/admin',methods  = ['GET', 'POST'])
+@login_required
+def myadmin():
+    pass
 
 
 @app.route('/logout')
@@ -222,7 +231,7 @@ def user(username):
     prev_url = url_for('user', username=user.username, page=posts.prev_num) \
         if posts.has_prev else None
     return render_template('user.html', user=user, posts=posts.items,
-                           next_url=next_url, prev_url=prev_url)
+                           next_url=next_url, prev_url=prev_url,admin = ad)
 
 
 @app.route('/edit_profile', methods=['GET', 'POST'])
@@ -333,6 +342,22 @@ def search():
         if page > 1 else None
     return render_template('search.html', title='Search', posts=posts,
                            next_url=next_url, prev_url=prev_url)
+
+
+class MyModelView(ModelView):
+    def is_accessible(self):
+        if current_user.username == ad:
+            return True
+        else:
+            return False
+
+admin.add_view(MyModelView(User,db.session))
+admin.add_view(MyModelView(Post,db.session))
+admin.add_view(MyModelView(Group,db.session))
+admin.add_view(MyModelView(Ingroup,db.session))
+admin.add_view(MyModelView(Message,db.session))
+
+
 @app.errorhandler(404)
 def not_found_error(error):
     return render_template('404.html'), 404

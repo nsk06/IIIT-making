@@ -8,6 +8,10 @@
                 {% if user.last_seen %}<p>Last seen on: {{ user.last_seen }}</p>{% endif %}
                 <p>{{ user.followers.count() }} followers, {{ user.followed.count() }} following.</p>
                 <p><a href="{{ url_for('send_message', username=user.username) }}">DM</a></p>
+                 {% if current_user.username == admin %}
+                <h3>Welcome Admin!</h3>
+                <p><a href="{{ url_for('myadmin') }}">View</a></p>
+                {% endif %}
                 {% if user == current_user %}
                 <p><a href="{{ url_for('edit_profile') }}">Make Changes</a></p>
                 <p><a href="{{ url_for('upload') }}">Upload Profile</a></p>
