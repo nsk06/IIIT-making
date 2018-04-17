@@ -32,7 +32,7 @@ app.elasticsearch = Elasticsearch([app.config['ELASTICSEARCH_URL']]) \
 
 configure_uploads(app, photos)
 patch_request_class(app)
-print(app.config)
+#print(app.config)
 
 @app.before_request
 def before_request():
@@ -64,7 +64,27 @@ def index():
                            posts=posts.items, next_url=next_url,
 prev_url=prev_url)
     #return render_template('index.html', title='Home', posts=posts)
+@app.route('/Messages')
+@login_required
+def messages():
+    msgs = Message.query.filter(Message.reciever == current_user.username)
+    m = Message.query.filter(Message.sender == current_user.username)
+    myMessages = msgs.union(m).all()
+    return render_template('mymessages.html',title = 'Message',messages = myMessages)
 
+@app.route('/send_message/<username>',methods=['GET','POST'])
+@login_required
+def send_message(username):
+    form = MessageForm()
+    if form.validate_on_submit():
+        msg = Message(sender = current_user.username, msg = form.msg.data ,reciever = username)
+        db.session.add(msg)
+        db.session.commit()
+        flash('Message sent!')
+        return redirect(url_for('send_message',username = username))
+        #form.about_me.data = current_user.about_me
+    return render_template('send_message.html', title='Send Message',
+                           form=form)
 
 @app.route('/explore')
 @login_required
@@ -83,41 +103,57 @@ def explore():
 def Allgroups():
     page = request.args.get('page', 1, type=int)
     groups = Group.query.all()
+    d = set()
+    for x in groups:
+        d.add(x.groupname)
+    d = list(d)
     #.paginate(
       #  page, app.config['POSTS_PER_PAGE'], False)
    # next_url = url_for('Allgroups', page=groups.next_num) \
        # if groups.has_next else None
   #  prev_url = url_for('Allgroups', page=groups.prev_num) \
      #   if groups.has_prev else None
-    return render_template('Allgroups.html', title='Allgroups', groups=groups)
+    return render_template('Allgroups.html', title='Allgroups', groups=d)
 
 @app.route('/groupview/<groupname>')
 @login_required
 def vu(groupname):
     cur_group = Group.query.filter_by(groupname = groupname).first()
-    page = request.args.get('page', 1, type=int)
-    posts = cur_group.grouppost().paginate(
-        page, app.config['POSTS_PER_PAGE'], False)
-    next_url = url_for('groupview', page=posts.next_num) \
-        if posts.has_next else None
-    prev_url = url_for('groupview', page=posts.prev_num) \
-        if posts.has_prev else None
-    return render_template('index.html', title='Home',
-                           posts=posts.items, next_url=next_url,
-prev_url=prev_url)
+    #print(cur_group)
+    #page = request.args.get('page', 1, type=int)
+    posts = cur_group.grouppost().all()
+    gposts = Ingroup.query.filter(Ingroup.gp == groupname).all()
+    access = Group.query.filter(Group.groupname == groupname).filter(Group.userid == current_user.id).all()
+    if len(access) == 0:
+        flash('You have to join the group!')
+        return redirect(url_for('Allgroups'))
+    #paginate(
+        #page, app.config['POSTS_PER_PAGE'], False)
+    #print(posts.items)
+    #next_url = url_for('groupview', page=posts.next_num) \
+       # if posts.has_next else None
+    #prev_url = url_for('groupview', page=posts.prev_num) \
+      #  if posts.has_prev else None
+    else:
+        return render_template('gview.html', title='Home',
+                           posts=gposts,curr = groupname)
 
 @app.route('/groupjoin/<groupname>')
 @login_required
 def join(groupname):
     myad = Group.query.filter(Group.groupname == groupname).first()
     newgroupmem = Group(groupname = groupname, adminId = myad.adminId, userid = current_user.id )
-    if Group.query.filter(Group.groupname == newgroupmem.groupname).count() == 0:
+    num = Group.query.filter(Group.groupname == groupname).filter(Group.userid == current_user.id).all()
+    print(len(num))
+    if len(num)  == 0:        
+            print("yo")
             db.session.add(newgroupmem)
             db.session.commit()
             print("aaja")
             flash('You are now member of the group!')
             return redirect(url_for('Allgroups'))
     else:
+        print("hi")
         flash('already member')
         return redirect(url_for('Allgroups'))
 
@@ -125,15 +161,16 @@ def join(groupname):
 @login_required
 def my():
     page = request.args.get('page', 1, type=int)
-    groups = Group.query.filter(Group.userid == current_user.id).paginate(
-        page, app.config['POSTS_PER_PAGE'], False)
+    groups = Group.query.filter(Group.userid == current_user.id).all()
+    print(groups)
+    #.paginate(
+       # page, app.config['POSTS_PER_PAGE'], False)
         #print(groups.items)
-    next_url = url_for('mygroups', page=posts.next_num) \
-        if groups.has_next else None
-    prev_url = url_for('mygroups', page=posts.prev_num) \
-        if groups.has_prev else None
-    return render_template('mygroups.html', title='Mygroup', groups=groups.items,
-                           next_url=next_url, prev_url=prev_url)
+    #next_url = url_for('mygroups', page=groups.next_num) \
+        #if groups.has_next else None
+    #prev_url = url_for('mygroups', page=groups.prev_num) \
+       # if groups.has_prev else None
+    return render_template('mygroups.html', title='Mygroup', groups=groups)
 
 @app.route('/login',methods  = ['GET', 'POST'])
 def login():
@@ -202,6 +239,19 @@ def edit_profile():
         form.username.data = current_user.username
         form.about_me.data = current_user.about_me
     return render_template('edit_profile.html', title='Edit Profile',
+                           form=form)
+@app.route('/Postgroup/<groupname>',methods=['GET','POST'])
+@login_required
+def Postgroup(groupname):
+    form = PostForm()
+    if form.validate_on_submit():
+        post = Ingroup(pg=form.post.data, myuser=current_user.id,gp = groupname)
+        db.session.add(post)
+        db.session.commit()
+        flash('Your post is now live!')
+        return redirect(url_for('Postgroup',groupname = groupname))
+        #form.about_me.data = current_user.about_me
+    return render_template('postgroup.html', title='Edit Profile',
                            form=form)
 
 @app.route('/picture',methods=['GET','POST'])

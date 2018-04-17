@@ -5,7 +5,7 @@ from passlib.context import CryptContext
 from flask_login import UserMixin
 #from login import Login
 from search import *
-
+from login import *
 class SearchableMixin(object):
     @classmethod
     def search(cls, expression, page, per_page):
@@ -55,9 +55,9 @@ followers = db.Table('followers',
     db.Column('follower_id', db.Integer, db.ForeignKey('user.id')),
     db.Column('followed_id', db.Integer, db.ForeignKey('user.id'))
 )
-group = db.Table('Groups',
-    db.Column('userid',db.Integer,db.ForeignKey('user.id')),
-    db.Column('groupname',db.String(64),index=True,unique=True))
+#group = db.Table('Groups',
+  #  db.Column('userid',db.Integer,db.ForeignKey('user.id')),
+   # db.Column('groupname',db.String(64),index=True,unique=True))
 
 class User(UserMixin,db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -67,7 +67,7 @@ class User(UserMixin,db.Model):
     posts = db.relationship('Post', backref='author', lazy='dynamic')
     about_me = db.Column(db.String(140))
     last_seen = db.Column(db.DateTime, default=datetime.utcnow)
-
+    gposts = db.relationship('Ingroup', backref='writer', lazy='dynamic')
     followed = db.relationship(
         'User', secondary=followers,
         primaryjoin=(followers.c.follower_id == id),
@@ -97,9 +97,17 @@ class User(UserMixin,db.Model):
         followed = Post.query.join(
             followers, (followers.c.followed_id == Post.user_id)).filter(
                 followers.c.follower_id == self.id)
+        for p in followed:
+            form1 = CommentForm()
+            if form1.validate_on_submit():
+                post = Post(body=form1.post.data, author=current_user)
+                db.session.add(post)
+                db.session.commit()
+                flash('You just now commented Wohoo XD!')
+                return redirect(url_for('index'))
         own = Post.query.filter_by(user_id=self.id)
         return followed.union(own).order_by(Post.timestamp.desc())
-
+        
 
 @log.user_loader
 def load_user(id):
@@ -111,21 +119,29 @@ class Post(SearchableMixin,db.Model):
     body = db.Column(db.String(140))
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    comments = db.relationship('Comment', backref='title', lazy='dynamic')
+
+    def get_comments(self):
+        return Comment.query.filter_by(post_id=post.id).order_by(Comment.timestamp.desc())
+
+
     def __repr__(self):
         return '<Post {}>'.format(self.body)
 db.event.listen(db.session, 'before_commit', Post.before_commit)
 db.event.listen(db.session, 'after_commit', Post.after_commit)
+class Comment(db.Model):
+    id = db.Column(db.Integer, primary_key = True)
+    body = db.Column(db.String(140))
+    timestamp = db.Column(db.DateTime)
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
 
+    def __repr__(self):
+        return '<Post %r>' % (self.body)
 class Group(db.Model):
     id = db.Column(db.Integer,primary_key=True)
     userid = db.Column(db.Integer,db.ForeignKey('user.id'))
     groupname = db.Column(db.String(64),index=True)
     adminId =  db.Column(db.Integer)
-    members = db.relationship(
-        'User', secondary=group,
-        primaryjoin=(group.c.userid == id),
-        secondaryjoin=(group.c.groupname == id),
-        backref=db.backref('Group', lazy='dynamic'), lazy='dynamic')
 
     def __repr__(self):
         return '<Group {}>'.format(self.groupname)
@@ -146,3 +162,15 @@ class Group(db.Model):
         for mem in groupusers:
             groupposts = Post.query.filter(mem.userid == Post.user_id)
         return groupposts.order_by(Post.timestamp.desc())
+
+class Ingroup(db.Model):
+    id = db.Column(db.Integer,primary_key=True)
+    myuser = db.Column(db.Integer,db.ForeignKey('user.id'))
+    gp = db.Column(db.String(64),db.ForeignKey('group.groupname'))
+    pg = db.Column(db.String(140))
+    time = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+class Message(db.Model):
+    id = db.Column(db.Integer,primary_key=True)
+    sender = db.Column(db.String(64),db.ForeignKey('user.username'))
+    msg = db.Column(db.String(700),index=True)
+    reciever = db.Column(db.String(64),db.ForeignKey('user.id'))
