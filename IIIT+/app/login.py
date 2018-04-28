@@ -48,7 +48,7 @@ class PostForm(FlaskForm):
         DataRequired(), Length(min=1, max=140)])
     submit = SubmitField('Submit')
 class CommentForm(FlaskForm):
-    comment = StringField('post', validators=[DataRequired(),Length(min=1, max=140)])
+    post =TextAreaField('post', validators=[DataRequired(),Length(min=1, max=140)])
     submit = SubmitField('Submit')
 class GroupForm(FlaskForm):
     name = TextAreaField('Name the group',validators=[

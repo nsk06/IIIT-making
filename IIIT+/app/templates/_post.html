@@ -3,5 +3,19 @@
 {%set x = [post.author.username,"profile.jpg"]|join('/') %}
 <td><img src= "{{ url_for('static', filename = x ) }}" alt= {{ post.author.username }} height="80" width="80" />
 <td><a href="{{ url_for('user', username=post.author.username) }}">{{ post.author.username }}</a> says:<br>{{ post.body }}</td>
+<td>{% if post.commentS %}
+		{% if post.commentS.count() >0 %}
+			<h2>Comments</h2>
+			<p>
+			{% for comment in post.commentS %}
+				<p>{{ comment.body }}</p>
+			{% endfor %}
+			</p>
+		{% endif %}
+	{% endif %}
+</td>
+<td>
+<a href="{{ url_for('post',i=post.id) }}">Add Comment</a>
+</td>
         </tr>
 </table>

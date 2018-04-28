@@ -73,6 +73,7 @@ class User(UserMixin,db.Model):
         primaryjoin=(followers.c.follower_id == id),
         secondaryjoin=(followers.c.followed_id == id),
         backref=db.backref('followers', lazy='dynamic'), lazy='dynamic')
+    comments=db.relationship('Comment', backref='creator', lazy='dynamic')
 
     def __repr__(self):
         return '<User {}>'.format(self.username)
@@ -119,11 +120,10 @@ class Post(SearchableMixin,db.Model):
     body = db.Column(db.String(140))
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    comments = db.relationship('Comment', backref='title', lazy='dynamic')
+    commentS = db.relationship('Comment', backref='POst', lazy='dynamic')
 
-    def get_comments(self):
-        return Comment.query.filter_by(post_id=post.id).order_by(Comment.timestamp.desc())
-
+    #def get_comments(self):
+     #   return Comment.query.filter_by(post_id=post.id).order_by(Comment.timestamp.desc())
 
     def __repr__(self):
         return '<Post {}>'.format(self.body)
@@ -132,11 +132,11 @@ db.event.listen(db.session, 'after_commit', Post.after_commit)
 class Comment(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     body = db.Column(db.String(140))
-    timestamp = db.Column(db.DateTime)
+    timestamp = db.Column(db.DateTime,index=True, default=datetime.utcnow)
     post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
-
+    user_id= db.Column(db.Integer, db.ForeignKey('user.id'))
     def __repr__(self):
-        return '<Post %r>' % (self.body)
+        return '<Comment {}>'.format(self.body)
 class Group(db.Model):
     id = db.Column(db.Integer,primary_key=True)
     userid = db.Column(db.Integer,db.ForeignKey('user.id'))

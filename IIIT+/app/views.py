@@ -263,6 +263,19 @@ def Postgroup(groupname):
     return render_template('postgroup.html', title='Edit Profile',
                            form=form)
 
+@app.route('/post/<i>',methods=['GET','POST'])
+@login_required
+def post(i):
+    form=CommentForm()
+    post=Post.query.get(int(id))
+    if form.validate_on_submit():
+        comment=Comment(body=form.post.data,post_id=i,user_id=current_user.id)
+        db.session.add(comment)
+        db.session.commit()
+        flash('Comment Over')
+        return redirect(url_for('index'))
+    return render_template('comment.html',title='comment',form=form)
+
 @app.route('/picture',methods=['GET','POST'])
 @login_required
 def upload():
