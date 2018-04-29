@@ -16,12 +16,13 @@ db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 log = LoginManager(app)
 log.login_view = 'login'
-from database import *
 from login import *
+from database import *
 from upload import *
 from datetime import datetime
 from flask_admin import *
 from flask_admin.contrib.sqla import ModelView
+from flask_moment import Moment
 #app.config['SECRET_KEY'] = 'I have a dream'
 app.config['UPLOADED_PHOTOS_DEST'] = os.getcwd() + '/static'
 with app.app_context():
@@ -38,6 +39,7 @@ ad = "nonidh"
 #print(app.config)
 admin = Admin(app)
 
+moment = Moment(app)
 
 @app.before_request
 def before_request():
@@ -233,6 +235,11 @@ def user(username):
     return render_template('user.html', user=user, posts=posts.items,
                            next_url=next_url, prev_url=prev_url,admin = ad)
 
+@app.route('/user/<username>/popup')
+@login_required
+def user_popup(username):
+    user = User.query.filter_by(username=username).first_or_404()
+    return render_template('user_popup.html', user=user)
 
 @app.route('/edit_profile', methods=['GET', 'POST'])
 @login_required
@@ -267,9 +274,9 @@ def Postgroup(groupname):
 @login_required
 def post(i):
     form=CommentForm()
-    post=Post.query.get(int(id))
+    post=Post.query.get(int(i))
     if form.validate_on_submit():
-        comment=Comment(body=form.post.data,post_id=i,user_id=current_user.id)
+        comment=Comment(body=form.post.data,post_id=i,us=current_user.username)
         db.session.add(comment)
         db.session.commit()
         flash('Comment Over')

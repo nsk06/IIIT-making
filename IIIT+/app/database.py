@@ -134,7 +134,7 @@ class Comment(db.Model):
     body = db.Column(db.String(140))
     timestamp = db.Column(db.DateTime,index=True, default=datetime.utcnow)
     post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
-    user_id= db.Column(db.Integer, db.ForeignKey('user.id'))
+    us= db.Column(db.String(64), db.ForeignKey('user.username'))
     def __repr__(self):
         return '<Comment {}>'.format(self.body)
 class Group(db.Model):
@@ -169,8 +169,10 @@ class Ingroup(db.Model):
     gp = db.Column(db.String(64),db.ForeignKey('group.groupname'))
     pg = db.Column(db.String(140))
     time = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    event = db.Column(db.String(250))
 class Message(db.Model):
     id = db.Column(db.Integer,primary_key=True)
     sender = db.Column(db.String(64),db.ForeignKey('user.username'))
     msg = db.Column(db.String(700),index=True)
     reciever = db.Column(db.String(64),db.ForeignKey('user.id'))
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)

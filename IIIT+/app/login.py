@@ -2,7 +2,7 @@ from flask_wtf import FlaskForm
 from wtforms import *
 #from wtforms.validators import *
 from wtforms.validators import ValidationError, DataRequired, Email, EqualTo,Length
-from database import *
+from database import User
 from flask import request
 #from flask_babel import lazy_gettext as _l
 
