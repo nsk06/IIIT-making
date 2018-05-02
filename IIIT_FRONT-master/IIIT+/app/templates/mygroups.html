@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+{% block app_content %}
+    <h1>Hey, {{ current_user.username }}!</h1>
+    
+        <a href="{{ url_for('group') }}">Create New Group</a>
+        
+      {% if form %}
+                {{ wtf.quick_form(form) }}
+{% endif %}
+<table class="table table-hover">
+     <td width="256px">
+    {% for group in groups %}
+    <!--{% include '_group.html' %}--> 
+    <a href="{{ url_for('vu', groupname=group.groupname) }}">
+    {{ group.groupname }}
+    </a>
+</td>
+     </table>
+    {% endfor %}
+    {% if prev_url %}
+    <a href="{{ prev_url }}" class="pagination">More Groups</a>
+    {% endif %}
+    {% if next_url %}
+    <a href="{{ next_url }}" class="pagination">My Groups</a>
+{% endif %}
+{% endblock %}

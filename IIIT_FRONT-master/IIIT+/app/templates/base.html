@@ -1,0 +1,106 @@
+{% extends 'bootstrap/base.html' %}
+	{% block title %}
+		{% if title %}
+			<title>{{ title }} - IIIT+ </title>
+		{% else %}
+			<title>COME CONNECT TO ALL</title>
+		{% endif %}
+	{% endblock %}
+{% block navbar %}
+	<nav class="navbar navbar-default" role="navigation">
+		<div class="container">
+			<div class="navbar-header">
+				<a class="navbar-brand" href="{{ url_for('index') }}">HOME</a>
+				<a class="navbar-brand" href="{{ url_for('explore') }}">Explore</a>
+        <a class="navbar-brand" href="{{ url_for('Allgroups') }}">Allgroups</a>
+        {% if g.search_form %}
+                <form class="navbar-form navbar-left" method="get" action="{{ url_for('search') }}">
+                    <div class="form-group">
+                        {{ g.search_form.q(size=20, class="form-control", placeholder=g.search_form.q.label.text) }}
+                    </div>
+                </form>
+        {% endif %}
+				{% if current_user.is_anonymous %}
+				<a class="navbar-brand" href="{{ url_for('login') }}">Login</a>
+				{% else %}
+				<a class = "navbar-brand" href = "{{ url_for('user',username=current_user.username) }}">Profile</a>
+				<a class="navbar-brand" href="{{ url_for('logout') }}">Logout</a>
+        <a class="navbar-brand" href="{{ url_for('my') }}">MyGroups</a>
+        <a class="navbar-brand" href="{{ url_for('messages') }}">Messages
+        {% set new_messages = current_user.new_messages() %}
+                            {% if new_messages %}
+                            <span class="badge">{{ new_messages }}</span>
+                            {% endif %}
+                        </a>
+				{% endif %}
+			</div>
+		</div>
+	</nav>
+{% endblock %}
+{% block content %}
+        <div class="container">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-info" role="alert">{{ message }}
+         {% endfor %}
+         {% endif %}
+        {% endwith %}
+        {% block app_content %}{% endblock %}
+            </div>
+            {% endblock %}
+{% block scripts %}
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    {{ super() }}
+    {{ moment.include_moment() }}
+    <script>  
+     $(function () {
+            var timer = null;
+            var xhr = null;
+            $('.user_popup').hover(
+                function(event) {
+                    // mouse in event handler
+                    // extract user_popup page
+                    var elem = $(event.currentTarget);
+                    timer = setTimeout(function() {
+                        timer = null;
+                        xhr = $.ajax(
+                            '/user/' + elem.first().text().trim() + '/popup').done(
+                                function(data) {
+                                    xhr = null;
+                                    elem.popover({
+                                        trigger: 'manual',
+                                        html: true,
+                                        animation: false,
+                                        container: elem,
+                                        content: data
+                                    }).popover('show');
+                                    flask_moment_render_all();//using flask moment for accurate date time
+                                }
+                            );
+                    }, 1000);
+                },
+                function(event) {
+                    // mouse out event handler
+                    var elem = $(event.currentTarget);
+                    if (timer) {
+                        clearTimeout(timer); //timer for loading
+                        timer = null;
+                    }
+                    else if (xhr) {
+                        xhr.abort();
+                        xhr = null;
+                    }
+                    else {
+                        elem.popover('destroy'); // destroying popup
+                    }
+                }
+            );
+        });
+        </script>
+        {% endblock %}
+{% block styles %}
+        {{ super() }}
+       <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+{% endblock %}

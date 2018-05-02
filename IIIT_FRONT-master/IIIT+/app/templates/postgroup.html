@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+    <h1>Add Post to Group</h1>
+       {% if form %}
+                {{ wtf.quick_form(form) }}
+{% endif %}
+{% endblock %}
